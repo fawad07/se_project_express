@@ -9,7 +9,7 @@ const getUsers = (req, res) => {
         res.status(200).send(users);
     })
     .catch( (err) => {
-        comsole.error(err);
+        console.error(err);
         return res.status(500).send({ message: err.message });
     });
 };
@@ -19,7 +19,7 @@ const createUser = (req, res) => {
     const {name, avatar} = req.body;
     console.log(name, avatar); //debugging statement
 
-    user.create(name, avatar)
+    user.create( {name, avatar} )
     .then( (user) => res.status(201).send(user))
     .catch( (err) => {
         console.error(err);   //debugging
@@ -51,4 +51,4 @@ const getUserById = (req, res) => {
 }
 
 
-model.exports = { getUsers, createUser, getUserById };
+module.exports = { getUsers, createUser, getUserById };

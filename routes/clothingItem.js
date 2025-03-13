@@ -1,7 +1,17 @@
 const router = require("express").Router();
+const {clothingItems,createItem} = require("../controllers/clothingItem");
 
-router.get('/', () => console.log("GET all clothing items"));
-router.post('/', () => console.log("POST: create new clothing item"));
+//GET ALL
+router.get('/', clothingItems);
+
+//CREATE 
+router.post('/', createItem);
+
+//READ
+
+//UPDATE
+
+//DELETE (remove)
 router.delete('/', () => console.log("DELETE clothing item"));
 
 
