@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const {clothingItems,createItem} = require("../controllers/clothingItem");
+const {clothingItems,createItem, updateItem, deleteItem} = require("../controllers/clothingItem");
 
 //GET ALL
 router.get('/', clothingItems);
@@ -10,9 +10,10 @@ router.post('/', createItem);
 //READ
 
 //UPDATE
+router.put('/:itemId', updateItem);
 
 //DELETE (remove)
-router.delete('/', () => console.log("DELETE clothing item"));
+router.delete('/:itemId', deleteItem);
 
 
 export default router
