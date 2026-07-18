@@ -1,4 +1,5 @@
 const user = require("../models/user");
+const { BAD_REQUEST_ERROR_CODE, NOT_FOUND_ERROR_CODE, DEFAULT_ERROR_CODE } = require("../utils/errors");
 
 //GET /users
 
@@ -10,7 +11,7 @@ const getUsers = (req, res) => {
     })
     .catch( (err) => {
         console.error(err);
-        return res.status(500).send({ message: err.message });
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -24,9 +25,9 @@ const createUser = (req, res) => {
     .catch( (err) => {
         console.error(err);   //debugging
         if(err.name === "ValidationError"){
-            return res.status(400).send({message: err.message});
+            return res.status(BAD_REQUEST_ERROR_CODE).send({message: err.message});
         }//end if 
-        return res.status(500).send({message: err.message});
+        return res.status(DEFAULT_ERROR_CODE).send({message: "An error has occurred on the server."});
     });
 }
 
@@ -34,21 +35,24 @@ const createUser = (req, res) => {
 const getUserById = (req, res) => {
     const {userId} = req.params;
     user.findById(userId)
-    .onFail()
+    .orFail(() => {
+        const error = new Error("User not found");
+        error.statusCode = NOT_FOUND_ERROR_CODE;
+        throw error;
+    })
     .then( (user) => {
         res.status(200).send(user);
     })
-    .catch( (err) =>{
-        console.error(err);   //debugging
-        if(err.name === "DocumentNotFoundError"){
-            return res.status(404).send({message: err.message});
-        }//end if 
+    .catch( (err) => {
+        console.error(err);
+        if(err.statusCode === NOT_FOUND_ERROR_CODE){
+            return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        }
         else if(err.name === "CastError"){
-            return res.status(400).send({message: err.message});
-        }//end else
-        return res.status(500).send({message: err.message});
+            return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid user ID" });
+        }
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
 }
-
 
 module.exports = { getUsers, createUser, getUserById };

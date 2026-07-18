@@ -7,7 +7,7 @@ const indexRouter = require("./routes/index");
 const { PORT = 3001 } = process.env;
 
 // Connect DB
-mongoose.connect('mongodb://127.0.0.1:27017/wtwr_db')
+mongoose.connect('mongodb://localhost:27017/wtwr_db')
 .then( () => {
     console.log("Connected to db");
 })
@@ -19,8 +19,15 @@ app.get('/', (req, res) => {
   });
 
 app.use(express.json());
-app.use("/", indexRouter);
 
+app.use((req, res, next) => {
+  req.user = {
+    _id: '6a58ed3d2949db679f475619'
+  };
+  next();
+});
+
+app.use("/", indexRouter);
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

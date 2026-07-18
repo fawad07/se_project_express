@@ -1,88 +1,140 @@
-const clothingItems = require("../models/user");
-
+const clothingItems = require("../models/clothingItem");
+const { BAD_REQUEST_ERROR_CODE, NOT_FOUND_ERROR_CODE, DEFAULT_ERROR_CODE } = require("../utils/errors");
 
 //GET ALL ITEMS
-
 const getItems = (req, res) => {
-    console.log("IN clothing items CONTROLLER");   //debugging 
     clothingItems.find( {} )
-    .then( (clothingItems) => {
-        res.status(200).send(clothingItems);
+    .then( (items) => {
+        res.status(200).send(items);
     })
     .catch( (err) => {
         console.error(err);
-        return res.status(500).send({ message: err.message });
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
 }//end get all items
 
 //CREATE ITEM
-
 const createItem = (req, res) => {
-    console.log(req);  //debugging
-    console.log(req.body);  //debugging
-    console.log("IN clothing item CONTROLLER");   //debugging 
-    
     const {name, weather, imageUrl} = req.body;
+    const owner = req.user._id;
 
-    clothingItems.create( {name, weather, imageUrl} )
+    clothingItems.create( {name, weather, imageUrl, owner} )
     .then( (item) => {
-        console.log(item);
         res.status(201).send( {data: item} );
     })
     .catch( (err) => {
-        console.error(err);     //debugging
-        console.log(err);       //debugging
-        res.status(500).send({ message: err.message });
+        console.error(err);
+        if(err.name === "ValidationError"){
+            return res.status(BAD_REQUEST_ERROR_CODE).send({ message: err.message });
+        }
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
 }//end create Item
 
 //UPDATE
-
 const updateItem = (req, res) => {
-    console.log(req);  //debugging
-    console.log(req.body);  //debugging
-    console.log("IN update item CONTROLLER");   //debugging 
+    const {itemId} = req.params;
+    const {imageUrl} = req.body;
 
-    const {clothingItemId} = req.params;
-    const{imageUrl} = req.body;
-
-    clothingItems.findByIdAndUpdate(clothingItemId, {$set: {imageUrl} }).orFail()
+    clothingItems.findByIdAndUpdate(itemId, {$set: {imageUrl} })
+    .orFail(() => {
+        const error = new Error("Item not found");
+        error.statusCode = NOT_FOUND_ERROR_CODE;
+        throw error;
+    })
     .then( (clothingItem) => {
-        console.log(clothingItem);
-        res.status(201).send( {data: clothingItem} );
+        res.status(200).send( {data: clothingItem} );
     })
     .catch( (err) => {
-        console.error(err);     //debugging
-        console.log(err);       //debugging
-        res.status(500).send({ message: err.message });
+        console.error(err);
+        if(err.statusCode === NOT_FOUND_ERROR_CODE){
+            return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        }
+        else if(err.name === "CastError" || err.name === "ValidationError"){
+            return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid data" });
+        }
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
 }//end update item
 
 //DELETE
 const deleteItem = (req, res) => {
-    console.log(req);  //debugging
-    console.log(req.body);  //debugging
-    console.log("IN delete item CONTROLLER");   //debugging 
+    const {itemId} = req.params;
 
-    const {clothingItemId} = req.params;
-    clothingItems.findByIdAndDelete(clothingItemId).orFail()
-    .then( (clothingItem) => {
-        console.log(clothingItem);  //debugging
-        res.status(204).send( {} );
+    clothingItems.findByIdAndDelete(itemId)
+    .orFail(() => {
+        const error = new Error("Item not found");
+        error.statusCode = NOT_FOUND_ERROR_CODE;
+        throw error;
+    })
+    .then( (item) => {
+        res.status(200).send( {data: item} );
     })
     .catch( (err) => {
-        console.error(err);     //debugging
-        console.log(err);       //debugging
-        res.status(500).send({ message: err.message });
+        console.error(err);
+        if(err.statusCode === NOT_FOUND_ERROR_CODE){
+            return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        }
+        else if(err.name === "CastError"){
+            return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid item ID" });
+        }
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}
+}//end delete item
 
-module.exports = {getItems,createItem, updateItem, deleteItem};
+//LIKE ITEM
+const likeItem = (req, res) => {
+    clothingItems.findByIdAndUpdate(
+        req.params.itemId,
+        { $addToSet: { likes: req.user._id } },
+        { new: true },
+    )
+    .orFail(() => {
+        const error = new Error("Item not found");
+        error.statusCode = NOT_FOUND_ERROR_CODE;
+        throw error;
+    })
+    .then( (item) => {
+        res.status(200).send( {data: item} );
+    })
+    .catch( (err) => {
+        console.error(err);
+        if(err.statusCode === NOT_FOUND_ERROR_CODE){
+            return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        }
+        else if(err.name === "CastError"){
+            return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid item ID" });
+        }
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
+    });
+}//end like item
+
+//DISLIKE ITEM (UNLIKE)
+const dislikeItem = (req, res) => {
+    clothingItems.findByIdAndUpdate(
+        req.params.itemId,
+        { $pull: { likes: req.user._id } },
+        { new: true },
+    )
+    .orFail(() => {
+        const error = new Error("Item not found");
+        error.statusCode = NOT_FOUND_ERROR_CODE;
+        throw error;
+    })
+    .then( (item) => {
+        res.status(200).send( {data: item} );
+    })
+    .catch( (err) => {
+        console.error(err);
+        if(err.statusCode === NOT_FOUND_ERROR_CODE){
+            return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        }
+        else if(err.name === "CastError"){
+            return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid item ID" });
+        }
+        return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
+    });
+}//end dislike item
 
 
-/*
-1. Download POSTMAN
-2. fork the following:
-https://www.postman.com/tripleten-tests-team/tripleten-se-projects-tests/collection/hn20atu/sprint-12-tests?action=share&creator=23570023
-3. run app
-*/
+module.exports = {getItems, createItem, updateItem, deleteItem, likeItem, dislikeItem};
