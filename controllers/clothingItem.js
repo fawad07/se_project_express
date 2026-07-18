@@ -1,7 +1,7 @@
 const clothingItems = require("../models/clothingItem");
 const { BAD_REQUEST_ERROR_CODE, NOT_FOUND_ERROR_CODE, DEFAULT_ERROR_CODE } = require("../utils/errors");
 
-//GET ALL ITEMS
+// GET ALL ITEMS
 const getItems = (req, res) => {
     clothingItems.find( {} )
     .then( (items) => {
@@ -11,9 +11,9 @@ const getItems = (req, res) => {
         console.error(err);
         return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}//end get all items
+}// end get all items
 
-//CREATE ITEM
+// CREATE ITEM
 const createItem = (req, res) => {
     const {name, weather, imageUrl} = req.body;
     const owner = req.user._id;
@@ -29,9 +29,9 @@ const createItem = (req, res) => {
         }
         return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}//end create Item
+}// end create Item
 
-//UPDATE
+// UPDATE
 const updateItem = (req, res) => {
     const {itemId} = req.params;
     const {imageUrl} = req.body;
@@ -50,14 +50,14 @@ const updateItem = (req, res) => {
         if(err.statusCode === NOT_FOUND_ERROR_CODE){
             return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         }
-        else if(err.name === "CastError" || err.name === "ValidationError"){
+        if(err.name === "CastError" || err.name === "ValidationError"){
             return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid data" });
         }
         return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}//end update item
+}// end update item
 
-//DELETE
+// DELETE
 const deleteItem = (req, res) => {
     const {itemId} = req.params;
 
@@ -75,14 +75,14 @@ const deleteItem = (req, res) => {
         if(err.statusCode === NOT_FOUND_ERROR_CODE){
             return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         }
-        else if(err.name === "CastError"){
+        if(err.name === "CastError"){
             return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid item ID" });
         }
         return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}//end delete item
+}// end delete item
 
-//LIKE ITEM
+// LIKE ITEM
 const likeItem = (req, res) => {
     clothingItems.findByIdAndUpdate(
         req.params.itemId,
@@ -102,14 +102,14 @@ const likeItem = (req, res) => {
         if(err.statusCode === NOT_FOUND_ERROR_CODE){
             return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         }
-        else if(err.name === "CastError"){
+        if(err.name === "CastError"){
             return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid item ID" });
         }
         return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}//end like item
+}// end like item
 
-//DISLIKE ITEM (UNLIKE)
+// DISLIKE ITEM (UNLIKE)
 const dislikeItem = (req, res) => {
     clothingItems.findByIdAndUpdate(
         req.params.itemId,
@@ -129,12 +129,12 @@ const dislikeItem = (req, res) => {
         if(err.statusCode === NOT_FOUND_ERROR_CODE){
             return res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         }
-        else if(err.name === "CastError"){
+        if(err.name === "CastError"){
             return res.status(BAD_REQUEST_ERROR_CODE).send({ message: "Invalid item ID" });
         }
         return res.status(DEFAULT_ERROR_CODE).send({ message: "An error has occurred on the server." });
     });
-}//end dislike item
+}// end dislike item
 
 
 module.exports = {getItems, createItem, updateItem, deleteItem, likeItem, dislikeItem};
