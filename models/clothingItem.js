@@ -39,13 +39,13 @@ const clothingItemSchema = new mongoose.Schema({
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
-        Required: true,
+        required: true,
       },
     ],
     createdAt: {
       type: Date,
       default: Date.now,
-      Required: true,
+      required: true,
     },
   });
 

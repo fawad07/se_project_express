@@ -12,4 +12,4 @@ router.post('/', createUser);
 
 
 
-module.exports = router
+module.exports = router;
